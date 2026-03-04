@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "ts-node-dev api/index.ts",
-    "build": "tsc",
+    "build": "prisma generate && tsc",
     "start": "node dist/api/index.js",
     "prisma": "prisma"
   },
