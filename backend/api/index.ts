@@ -115,6 +115,10 @@ app.delete('/pedidos/:id', async (req, res) => {
 });
 
 
+app.get("/", (req, res) => {
+  res.send("Backend Friosecia rodando 🚀");
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`✅ Servidor rodando em http://localhost:${PORT}`);
