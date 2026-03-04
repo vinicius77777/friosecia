@@ -3,7 +3,7 @@ body {
   padding: 0;
   min-height: 100vh;
   font-family: "Poppins", sans-serif;
-  background: linear-gradient(135deg, #2b0040, #000);
+  background: linear-gradient(90deg, #3e005e, #242511);
   background-attachment: fixed;
   color: #fff;
 }
@@ -159,7 +159,6 @@ body {
 /* aumentar a largura das colunas de texto pra caber a seta */
 .pedidos-tabela th:nth-child(1),
 .pedidos-tabela td:nth-child(1), /* Descrição */
-.pedidos-tabela th:nth-child(4),
 .pedidos-tabela td:nth-child(4) { /* Localidade */
   width: 180px; /* maior que antes para a seta ficar ao lado */
 }
@@ -205,11 +204,16 @@ body {
 
 /* ====== MODAL ====== */
 .modal-overlay {
-  position: absolute;
+  position: fixed; /* 🔥 não depende da página */
   inset: 0;
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(5px);
   z-index: 9999;
+
+  display: flex;
+  justify-content: center;
+align-items: flex-start;
+padding-top: 10px; /* ajusta aqui */
 }
 
 .modal {
@@ -217,23 +221,16 @@ body {
   border-radius: 14px;
   padding: 30px;
   width: 400px;
-  max-width: 400px;
+  max-width: 90%;
   min-height: 150px;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+
   display: flex;
   flex-direction: column;
   gap: 12px;
-  text-align: center;
-  animation: fadeIn 0.25s ease;
-  z-index: 99999;
-  position: absolute;
-  top: 1%;
-  left: 45%;
-  transform: none;
-  margin-top: -490px;
-  margin-left: -150px;
-}
 
+  animation: fadeIn 0.25s ease;
+}
 
 /* fade sem mexer no translate */
 @keyframes fadeIn {

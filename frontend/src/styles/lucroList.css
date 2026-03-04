@@ -18,7 +18,7 @@
   to { transform: translateX(0); opacity: 1; }
 }
 
-/* brilho pulsante (neon discreto) */
+
 @keyframes softGlow {
   0% { box-shadow: 0 0 6px rgba(255,255,255,0.05); }
   50% { box-shadow: 0 0 14px rgba(255,255,255,0.12); }
@@ -317,4 +317,15 @@
 
 .btn-olho:hover {
   opacity: 0.7;
+}
+
+.total-row td {
+  padding: 8px 20px 8px 8px; 
+}
+
+.total-valor {
+  text-align: right;
+  padding-right: 45px;
+  font-weight: 700;
+  letter-spacing: 1px;
 }

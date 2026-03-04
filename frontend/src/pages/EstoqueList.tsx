@@ -233,6 +233,7 @@ export default function EstoqueList() {
             ...form,
             dia_entrada: dia,
             mes_entrada: mes,
+            ano_entrada: hoje.getFullYear(),
             fornecedor: loteFornecedor || form.fornecedor,
             nota_fiscal: loteNotaFiscal || form.nota_fiscal,
           };
@@ -264,6 +265,7 @@ export default function EstoqueList() {
               data_vencimento: item.data_vencimento,
               dia_entrada: dia,
               mes_entrada: mes,
+              ano_entrada: hoje.getFullYear(),
               fornecedor: loteFornecedor,
               nota_fiscal: loteNotaFiscal,
             };
@@ -317,18 +319,13 @@ export default function EstoqueList() {
     });
   };
 
-  const formatarDataEntrada = (item: EstoqueItem) => {
-  const dia = item.dia_entrada;
-  const mes = item.mes_entrada;
-  const ano = item.ano_entrada;
+ const formatarDataEntrada = (item: EstoqueItem) => {
+  if (!item.dia_entrada || !item.mes_entrada) return "";
 
-  if (!dia || !mes || !ano) return "";
+  const ano = item.ano_entrada || new Date().getFullYear();
 
-  return `${String(dia).padStart(2, "0")}/${mes}/${ano}`;
+  return `${String(item.dia_entrada).padStart(2, "0")}/${item.mes_entrada}/${ano}`;
 };
-
-
-
   // -------------------------------------------------------
   // EXPORTAÇÃO PDF / EXCEL
   // -------------------------------------------------------

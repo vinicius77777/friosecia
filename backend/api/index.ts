@@ -23,25 +23,33 @@ app.get('/estoque', async (req, res) => {
   }
 });
 
-// Criar novo item de estoque
 app.post('/estoque', async (req, res) => {
   try {
-    const data = req.body;
-    const novoRegistro = await prisma.estoque_registro.create({ data });
+    const hoje = new Date();
+    console.log("ANO GERADO:", hoje.getFullYear());
+
+    const novoRegistro = await prisma.estoque_registro.create({
+      data: {
+        ...req.body,
+        dia_entrada: hoje.getDate(),
+        mes_entrada: String(hoje.getMonth() + 1),
+        ano_entrada: hoje.getFullYear(),
+      },
+    });
+
     res.json(novoRegistro);
   } catch (error) {
-    console.error('Erro ao criar item de estoque:', error);
-    res.status(500).json({ error: 'Erro ao criar item de estoque.', details: String(error) });
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao criar item.' });
   }
 });
-
 // Atualizar item de estoque
 app.put('/estoque/:codigoItem', async (req, res) => {
   try {
     const { codigoItem } = req.params;
     const data = req.body;
     const registroAtualizado = await prisma.estoque_registro.update({
-      where: { codigoItem },
+      where: { codigoItem: Number(codigoItem) },
       data,
     });
     res.json(registroAtualizado);
@@ -56,7 +64,7 @@ app.delete('/estoque/:codigoItem', async (req, res) => {
   try {
     const { codigoItem } = req.params;
     await prisma.estoque_registro.delete({
-      where: { codigoItem },
+      where: { codigoItem: Number(codigoItem) },
     });
     res.json({ message: 'Item deletado com sucesso!' });
   } catch (error) {

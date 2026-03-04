@@ -31,7 +31,6 @@ interface Pedido {
   id: number;
   descricao: string;
   responsavel?: string;
-  localidade?: string;
   ano_saida?: number | null;
   mes_saida?: string | null;
   dia_saida?: number | null;
@@ -71,7 +70,6 @@ export default function LucroList() {
         id: Number(p.id),
         descricao: p.descricao,
         responsavel: p.responsavel ?? null,
-        localidade: p.localidade ?? null,
         ano_saida: p.ano_saida ?? null,
         mes_saida: p.mes_saida ?? null,
         dia_saida: p.dia_saida ?? null,
@@ -110,8 +108,7 @@ const pedidosFiltrados = pedidos.filter((p) => {
   // 🔎 FILTRO DE TEXTO
   const textoOk =
     p.descricao?.toLowerCase().includes(filtro.toLowerCase()) ||
-    (p.responsavel ?? "").toLowerCase().includes(filtro.toLowerCase()) ||
-    (p.localidade ?? "").toLowerCase().includes(filtro.toLowerCase());
+    (p.responsavel ?? "").toLowerCase().includes(filtro.toLowerCase());
 
   // 🔎 FILTRO POR MÊS
   const mesOk = !mesFiltro || p.mes_saida === mesFiltro;
@@ -368,10 +365,6 @@ if (modoGrafico === "mes") {
     maintainAspectRatio: false,
   };
 
-  // -------------------------------
-  // EXPORTAR PDF
-  // -------------------------------
-// -------------------------------
 const exportarPDF = () => {
   const doc = new jsPDF({
     orientation: "portrait",
@@ -379,58 +372,123 @@ const exportarPDF = () => {
     format: "A4",
   });
 
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(22);
-  doc.text("Relatório de Lucro por Responsável e Loja", 40, 50);
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const dataAtual = new Date().toLocaleDateString("pt-BR");
 
-  // AGRUPAR POR RESPONSÁVEL + LOJA
-  const lucroGrupo: Record<string, { responsavel: string; loja: string; valor: number }> = {};
+  // ======================
+  // CABEÇALHO (CAIXA)
+  // ======================
+  const headerX = 40;
+  const headerY = 30;
+  const headerWidth = pageWidth - 80;
+  const headerHeight = 40;
+
+  doc.setDrawColor(0);
+  doc.setLineWidth(1);
+  doc.rect(headerX, headerY, headerWidth, headerHeight);
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(14);
+  doc.text(
+    "RELATÓRIO DE LUCRO",
+    headerX + headerWidth / 2,
+    headerY + headerHeight / 2 + 5,
+    { align: "center" }
+  );
+
+  // ======================
+  // AGRUPAR POR PRODUTO
+  // ======================
+  const lucroPorProduto: Record<
+    string,
+    { descricao: string; quantidade: number; lucro: number }
+  > = {};
 
   pedidosFiltrados.forEach((p) => {
-    const responsavel = p.responsavel || "Sem responsável";
-    const loja = p.localidade || "Sem loja";
+    const descricao = p.descricao || "Produto sem nome";
+    const chave = descricao;
 
-    const chave = `${responsavel}__${loja}`; // chave única
-
-    if (!lucroGrupo[chave]) {
-      lucroGrupo[chave] = {
-        responsavel,
-        loja,
-        valor: 0,
+    if (!lucroPorProduto[chave]) {
+      lucroPorProduto[chave] = {
+        descricao,
+        quantidade: 0,
+        lucro: 0,
       };
     }
 
-    lucroGrupo[chave].valor += p.lucratividade_total || 0;
+    lucroPorProduto[chave].quantidade += Number(p.quant_saida || 0);
+    lucroPorProduto[chave].lucro += Number(p.lucratividade_total || 0);
   });
 
-  // TRANSFORMAR PARA ARRAY USADO NA TABELA
-  const resumoArray = Object.values(lucroGrupo).map((item) => ({
-    responsavel: item.responsavel,
-    loja: item.loja,
-    valor: formatarValor(item.valor),
-  }));
+  const resumoArray = Object.values(lucroPorProduto);
 
+  // ======================
   // TABELA
+  // ======================
   autoTable(doc, {
     startY: 90,
-    head: [["Responsável", "Loja", "Lucro Total"]],
-    body: resumoArray.map((r) => [r.responsavel, r.loja, r.valor]),
+    margin: { left: 55, right: 40 },
+    head: [["Produto", "Qtd Vendida", "Lucro Total"]],
+    body: resumoArray.map((r) => [
+      r.descricao,
+      r.quantidade,
+      formatarValor(r.lucro),
+    ]),
     theme: "grid",
-    styles: { fontSize: 12, halign: "center" },
-    headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255] }, // CABEÇALHO PRETO
-    margin: { left: 40, right: 40 },
-  });
+    styles: {
+      fontSize: 10,
+      cellPadding: 6,
+      textColor: "#000",
+      lineColor: "#000",
+      lineWidth: 1,
+    },
+    headStyles: {
+      fillColor: "#fff",
+      textColor: "#000",
+      fontStyle: "bold",
+      lineColor: "#000",
+      lineWidth: 1,
+    },
+    columnStyles: {
+      0: { halign: "left", cellWidth: 250 },
+      1: { halign: "center", cellWidth: 80 },
+      2: { halign: "right", cellWidth: 120 }, // lucro alinhado à direita 🔥
+    },
+  } as any);
 
-  // VALOR TOTAL FINAL
-  const posY = (doc as any).lastAutoTable.finalY + 40;
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(16);
-  doc.text(`Lucro Total do Mês: ${formatarValor(lucroTotalMes)}`, 40, posY);
+  // ======================
+  // TOTAL GERAL DO PERÍODO
+  // ======================
+  const totalGeral = pedidosFiltrados.reduce(
+    (acc, p) => acc + Number(p.lucratividade_total || 0),
+    0
+  );
 
-  // SALVAR PDF
-  doc.save("relatorio_lucro.pdf");
+  const yTotal = (doc as any).lastAutoTable.finalY + 15;
+  const larguraTotal = 240;
+  const xTotal = pageWidth - larguraTotal - 40;
+
+  doc.setFontSize(11);
+  doc.rect(xTotal, yTotal, larguraTotal, 25);
+
+  doc.text(
+    `LUCRO TOTAL DO PERÍODO: ${formatarValor(totalGeral)}`,
+    xTotal + larguraTotal / 2,
+    yTotal + 17,
+    { align: "center" }
+  );
+
+  // ======================
+  // RODAPÉ
+  // ======================
+  doc.setFontSize(9);
+  doc.text(`Gerado em: ${dataAtual}`, 55, yTotal + 50);
+
+  // ======================
+  // SALVAR
+  // ======================
+  doc.save(`relatorio_lucro_${dataAtual}.pdf`);
 };
-
   // ---------------------------------------------------
   // EXPORTAR EXCEL
   // ---------------------------------------------------
@@ -438,7 +496,6 @@ const exportarPDF = () => {
   const dados = pedidosFiltrados.map((p) => ({
     Descrição: p.descricao || "",
     Responsável: p.responsavel || "",
-    Localidade: p.localidade || "",
     Quantidade: p.quant_saida || "",
     "Valor Unitário": formatarValor(p.valor_unitario_venda),
     "Valor Total": formatarValor(p.valor_total_saida),
@@ -461,7 +518,6 @@ const exportarPDF = () => {
   const colunas = [
     { wch: 30 }, // Descrição
     { wch: 20 }, // Responsável
-    { wch: 20 }, // Localidade
     { wch: 12 }, // Quantidade
     { wch: 15 }, // Valor Unitário
     { wch: 15 }, // Valor Total
@@ -605,8 +661,6 @@ saveAs(blob, "relatorio_lucro.xlsx");
         <thead>
           <tr>
             <th onClick={() => ordenarPor("descricao")}>Descrição</th>
-            <th onClick={() => ordenarPor("responsavel")}>Responsável</th>
-            <th>Localidade</th>
             <th>Entrada</th>
             <th onClick={() => ordenarPor("quant_saida")}>Quantidade</th>
             <th>Valor Unitário</th>
@@ -621,8 +675,6 @@ saveAs(blob, "relatorio_lucro.xlsx");
           {pedidosFiltrados.map((p) => (
             <tr key={p.id}>
               <td>{p.descricao}</td>
-              <td>{p.responsavel}</td>
-              <td>{p.localidade}</td>
               <td>{formatarDataSaida(p)}</td>
               <td>{p.quant_saida}</td>
 
@@ -645,8 +697,8 @@ saveAs(blob, "relatorio_lucro.xlsx");
           ))}
 
           <tr className="total-row">
-            <td colSpan={8}>TOTAL</td>
-            <td>{formatarValor(lucroTotalMes)}</td>
+            <td colSpan={6}>TOTAL</td>
+            <td className="total-valor">{formatarValor(lucroTotalMes)}</td>
             <td></td>
           </tr>
         </tbody>

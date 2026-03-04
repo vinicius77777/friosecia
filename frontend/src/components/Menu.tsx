@@ -4,7 +4,7 @@ import "../styles/menu.css";
 export default function Menu() {
   return (
     <nav className="menu">
-  <img src="/images/Logo-Photoroom.png" className="logo" />
+  <img src="/images/image.png" className="logo" />
 
   <div className="menu-center">
     <Link to="/estoque" className="menu-link">📦 Estoque</Link>

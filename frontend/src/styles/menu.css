@@ -1,7 +1,7 @@
 .menu {
   display: grid;
   grid-template-columns: 150px 1fr 150px; /* logo / links / espaço vazio */
-  background: linear-gradient(180deg, #360a4d, #1e0827);
+  background: linear-gradient(90deg, #502186, #4b4017);
   padding: 10px 20px;
   border-radius: 12px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);

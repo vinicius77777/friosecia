@@ -84,7 +84,6 @@ export default function PedidosList() {
         descricao: formData.descricao,
         quant_saida: formData.quant_saida,
         responsavel: formData.responsavel,
-        saida_loja: formData.localidade,
       });
 
       setFormData(prev => ({
@@ -508,11 +507,10 @@ const exportarPDF = () => {
       autoTable(doc, {
         startY: yTotal + 26,
         margin: { left: 55, right: 40 },
-        head: [["DATA", "DESTINO", "RECEBIMENTO"]],
+        head: [["DATA"]],
         body: [[
           dataPedido,
           pedidosFiltrados[0]?.localidade || "",
-          pedidosFiltrados[0]?.responsavel || "",
         ]],
         theme: "grid",
         styles: {
@@ -530,7 +528,7 @@ const exportarPDF = () => {
       // SALVAR
       // ======================
       doc.save(
-        `pedido ${pedidosFiltrados[0]?.localidade || "cliente"} ${dataPedido}.pdf`
+        `pedido ${pedidosFiltrados[0]?.localidade} ${dataPedido}.pdf`
       );
     };
 
@@ -544,14 +542,9 @@ const exportarPDF = () => {
 };
 
 
-
-
-
   const exportarXLSX = () => {
     const dados = pedidosFiltrados.map((p) => ({
       Descrição: p.descricao || "",
-      Responsável: p.responsavel || "",
-      Loja: p.localidade || "",
       Quantidade: p.quant_saida || "",
       "Valor Unitário": formatarValor(p.valor_unitario_venda),
       "Valor Total": formatarValor(p.valor_total_saida),
@@ -565,8 +558,6 @@ const exportarPDF = () => {
 
     dados.push({
       Descrição: "TOTAL:",
-      Responsável: "",
-      Loja: "",
       Quantidade: "",
       "Valor Unitário": "",
       "Valor Total": formatarValor(totalGeral), // mantém o mesmo formato BRL
@@ -695,10 +686,6 @@ const exportarPDF = () => {
               Descrição {ordemDescAsc ? "▲" : "▼"}
             </th>
             <th>Quantidade</th>
-            <th onClick={ordenarPorResponsavel} className="coluna-clickavel">
-              Responsável {ordemRespAsc ? "▲" : "▼"}
-            </th>
-            <th>Loja</th>
             <th>Data</th>
             <th>Valor Unitário</th>
             <th>Valor Total</th>
@@ -711,8 +698,6 @@ const exportarPDF = () => {
             <tr key={p.id}>
               <td>{p.descricao}</td>
               <td>{p.quant_saida}</td>
-              <td>{p.responsavel}</td>
-              <td>{p.localidade}</td>
               <td>{formatarDataPedido(p)}</td>
               <td>{formatarValor(p.valor_unitario_venda)}</td>
               <td>{formatarValor(p.valor_total_saida)}</td>
@@ -816,24 +801,7 @@ const exportarPDF = () => {
                   })
                 }
               />
-
-
-            <input
-              placeholder="Responsável"
-              value={formData.responsavel || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, responsavel: e.target.value })
-              }
-              onBlur={(e) => preencherAutomaticoResponsavel(e.target.value)}
-            />
-
-            <input
-              placeholder="Loja"
-              value={formData.localidade || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, localidade: e.target.value })
-              }
-            />
+  
 
             <button
               className="btn-novo"
@@ -843,22 +811,19 @@ const exportarPDF = () => {
                   return;
                 }
 
-                // pega nome e loja do primeiro item OU do item atual
+                // pega nome e loja do   item OU do item atual
                 const responsavelBase = itensPedido[0]?.responsavel || formData.responsavel;
-                const lojaBase = itensPedido[0]?.localidade || formData.localidade;
 
                 const itemCompletado = {
                   ...formData,
                   responsavel: responsavelBase || "",
-                  localidade: lojaBase || "",
                 };
 
                 setItensPedido(prev => [...prev, itemCompletado]);
 
-                // depois que adiciona, limpa SOMENTE os campos de item
-                setFormData({
+              // depois que adiciona, limpa SOMENTE os campos de item
+              setFormData({
                 responsavel: responsavelBase,
-                localidade: lojaBase,
                 data_saida: formData.data_saida, // 🔥 mantém a mesma data
               });
               }}
